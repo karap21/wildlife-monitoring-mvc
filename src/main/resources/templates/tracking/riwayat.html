@@ -1,10 +1,121 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Pergerakan - WildTrack</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        tailwind.config = { theme: { extend: { colors: { 'wms-bg': '#0f172a', 'wms-surface': '#1e293b', 'wms-text': '#f8fafc', 'wms-accent': '#22c55e' } } } }
+    </script>
+
+    <style>
+        #map { height: calc(100vh - 16rem); width: 100%; border-radius: 0.75rem; z-index: 10; }
+        .leaflet-popup-content-wrapper { background-color: #1e293b; color: #f8fafc; border: 1px solid #334155; }
+        .leaflet-popup-tip { background-color: #1e293b; border: 1px solid #334155; }
+    </style>
 </head>
-<body>
-$END$
+<body class="bg-wms-bg text-wms-text flex h-screen overflow-hidden font-sans">
+
+<div th:replace="~{fragments/sidebar :: sidebar('riwayat')}"></div>
+
+<main class="flex-1 overflow-y-auto p-8 flex flex-col">
+    <header class="mb-6">
+        <h1 class="text-2xl font-bold text-wms-accent">Historical GPS Tracking</h1>
+        <p class="text-sm text-gray-400 mt-1">Analisis pola pergerakan dan rute perjalanan satwa</p>
+    </header>
+
+    <div class="bg-wms-surface p-4 rounded-xl border border-gray-700 mb-6">
+        <form th:action="@{/riwayat}" method="GET" class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-medium text-gray-400 mb-1">Pilih Satwa</label>
+                <select name="animalId" required class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-wms-accent">
+                    <option value="">-- Pilih Satwa --</option>
+                    <option th:each="hewan : ${daftarHewan}"
+                            th:value="${hewan.animal_id}"
+                            th:text="${hewan.name} + ' (' + ${hewan.species_name} + ')'"
+                            th:selected="${hewan.animal_id == selectedAnimal}"></option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1">Dari Tanggal</label>
+                <input type="date" name="startDate" th:value="${startDate}" class="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-wms-accent">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1">Sampai Tanggal</label>
+                <input type="date" name="endDate" th:value="${endDate}" class="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-wms-accent">
+            </div>
+
+            <div class="flex gap-2">
+                <button type="submit" class="px-6 py-2 bg-wms-accent hover:bg-green-600 text-white font-bold rounded-lg flex items-center gap-2 transition-colors">
+                    <i data-lucide="search" class="w-4 h-4"></i> Tampilkan Rute
+                </button>
+
+                <a th:if="${selectedAnimal != null}"
+                   th:href="@{/riwayat/export(animalId=${selectedAnimal}, startDate=${startDate}, endDate=${endDate})}"
+                   class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg flex items-center gap-2 transition-colors">
+                    <i data-lucide="download" class="w-4 h-4"></i> Export CSV
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div th:if="${dataRiwayat == null}" class="flex-1 bg-wms-surface border border-gray-700 rounded-xl flex items-center justify-center">
+        <p class="text-gray-400 flex items-center gap-2"><i data-lucide="map" class="w-5 h-5"></i> Silakan pilih satwa untuk melihat riwayat rute.</p>
+    </div>
+
+    <div th:if="${dataRiwayat != null and #lists.isEmpty(dataRiwayat)}" class="flex-1 bg-wms-surface border border-gray-700 rounded-xl flex items-center justify-center">
+        <p class="text-gray-400 flex items-center gap-2"><i data-lucide="alert-circle" class="w-5 h-5"></i> Tidak ada data koordinat untuk rentang waktu tersebut.</p>
+    </div>
+
+    <div th:if="${dataRiwayat != null and not #lists.isEmpty(dataRiwayat)}" id="map" class="shadow-xl border border-gray-700 relative"></div>
+</main>
+
+<script th:inline="javascript">
+    lucide.createIcons();
+
+    const riwayatData = /*[[${dataRiwayat}]]*/ [];
+
+    if (riwayatData && riwayatData.length > 0) {
+        // Inisialisasi Peta
+        const map = L.map('map').setView([-2.5, 118.0], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const titikKoordinat = [];
+        const circleOptions = { color: '#ef4444', fillColor: '#ef4444', fillOpacity: 1, radius: 4 };
+
+        // Gambar titik-titik singgah
+        riwayatData.forEach(pos => {
+            const lat = parseFloat(pos.latitude);
+            const lng = parseFloat(pos.longitude);
+
+            if (!isNaN(lat) && !isNaN(lng)) {
+                titikKoordinat.push([lat, lng]);
+
+                const waktu = new Date(pos.recorded_at).toLocaleString();
+                const popupHTML = `<div class="text-sm"><b>Waktu:</b> ${waktu}<br><b>Alt:</b> ${pos.altitude_meters || 0} m</div>`;
+
+                L.circleMarker([lat, lng], circleOptions).addTo(map).bindPopup(popupHTML);
+            }
+        });
+
+        // Tarik garis yang menghubungkan semua titik
+        if (titikKoordinat.length > 0) {
+            const polyline = L.polyline(titikKoordinat, { color: '#22c55e', weight: 3, opacity: 0.8 }).addTo(map);
+
+            // Zoom otomatis agar seluruh garis terlihat presisi di tengah layar
+            map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+        }
+    }
+</script>
 </body>
 </html>

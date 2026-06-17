@@ -1,10 +1,70 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Sistem Peringatan - WildTrack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { 'wms-bg': '#0f172a', 'wms-surface': '#1e293b', 'wms-text': '#f8fafc', 'wms-accent': '#22c55e' } } } }</script>
 </head>
-<body>
-$END$
+<body class="bg-wms-bg text-wms-text flex h-screen overflow-hidden font-sans">
+
+<div th:replace="~{fragments/sidebar :: sidebar('peringatan')}"></div>
+
+<main class="flex-1 flex flex-col h-screen overflow-hidden p-8">
+    <header class="mb-6 shrink-0">
+        <h1 class="text-2xl font-bold text-red-400 flex items-center gap-2">
+            <i data-lucide="bell" class="w-6 h-6"></i> System Alerts
+        </h1>
+        <p class="text-sm text-gray-400 mt-1">Notifikasi pelanggaran zona dan status kritis perangkat</p>
+    </header>
+
+    <div class="bg-wms-surface border border-gray-700 rounded-xl shadow-lg flex-1 overflow-y-auto min-h-0 custom-scrollbar">
+        <div class="p-6">
+            <div th:if="${#lists.isEmpty(daftarAlert)}" class="text-center py-12">
+                <i data-lucide="check-circle" class="w-12 h-12 text-green-500 mx-auto mb-4"></i>
+                <p class="text-gray-400">Semua aman. Tidak ada peringatan sistem saat ini.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div th:each="alert : ${daftarAlert}"
+                     th:classappend="${alert.is_read ? 'opacity-60 bg-gray-900 border-gray-800' : 'bg-red-500/10 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]'}"
+                     class="p-4 rounded-xl border flex items-start gap-4 transition-all">
+
+                    <div class="mt-1">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 text-red-500"></i>
+                    </div>
+
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-bold text-white text-lg" th:text="${alert.alert_type}">JENIS ALERT</h3>
+                            <span class="text-xs text-gray-500" th:text="${alert.formatted_time}">Waktu</span>
+                        </div>
+                        <p class="text-sm font-semibold text-wms-accent mt-1" th:text="'Target: ' + ${alert.animal_name}">Nama Hewan</p>
+                        <p class="text-sm text-gray-300 mt-1" th:text="${alert.message}">Pesan Peringatan</p>
+                    </div>
+
+                    <div th:unless="${alert.is_read}">
+                        <form th:action="@{/peringatan/tandai-dibaca}" method="POST">
+                            <input type="hidden" name="alertId" th:value="${alert.alert_id}">
+                            <button type="submit" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-300 rounded-lg border border-gray-600 transition-colors cursor-pointer">
+                                Tandai Dibaca
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+</style>
+
+<script>lucide.createIcons();</script>
 </body>
 </html>

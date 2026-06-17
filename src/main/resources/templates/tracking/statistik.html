@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Statistik - WildTrack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <script>tailwind.config = { theme: { extend: { colors: { 'wms-bg': '#0f172a', 'wms-surface': '#1e293b', 'wms-text': '#f8fafc', 'wms-accent': '#22c55e' } } } }</script>
+</head>
+<body class="bg-wms-bg text-wms-text flex h-screen overflow-hidden font-sans">
+
+<div th:replace="~{fragments/sidebar :: sidebar('statistik')}"></div>
+
+<main class="flex-1 overflow-y-auto p-8">
+    <header class="mb-8">
+        <h1 class="text-2xl font-bold text-wms-accent flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-6 h-6"></i> Laporan Populasi & Statistik
+        </h1>
+        <p class="text-sm text-gray-400 mt-1">Analisis sebaran populasi satwa berdasarkan spesies</p>
+    </header>
+
+    <div class="bg-wms-surface p-6 border border-gray-700 rounded-xl shadow-lg w-full max-w-4xl mx-auto">
+        <h3 class="text-center font-bold mb-4 text-white">Distribusi Populasi Satwa Dilindungi</h3>
+        <canvas id="grafikPopulasi" height="120"></canvas>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    lucide.createIcons();
+
+    // Ambil data JSON dari Spring Boot
+    const dataDatabase = /*[[${dataGrafik}]]*/ [];
+
+    // Pisahkan menjadi Label (Nama Spesies) dan Value (Jumlah)
+    const labelSpesies = dataDatabase.map(item => item.label);
+    const nilaiPopulasi = dataDatabase.map(item => item.value);
+
+    // Render ke Chart.js
+    const ctx = document.getElementById('grafikPopulasi').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labelSpesies,
+            datasets: [{
+                label: 'Jumlah Satwa',
+                data: nilaiPopulasi,
+                backgroundColor: 'rgba(34, 197, 94, 0.5)', // Warna hijau wms-accent
+                borderColor: 'rgba(34, 197, 94, 1)',
+                borderWidth: 2,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#9ca3af', stepSize: 1 }, grid: { color: '#374151' } },
+                x: { ticks: { color: '#9ca3af' }, grid: { display: false } }
+            },
+            plugins: {
+                legend: { labels: { color: '#f8fafc' } }
+            }
+        }
+    });
+</script>
+</body>
+</html>

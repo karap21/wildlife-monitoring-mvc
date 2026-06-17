@@ -1,10 +1,197 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Simulator - WildTrack</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        tailwind.config = { theme: { extend: { colors: { 'wms-bg': '#0f172a', 'wms-surface': '#1e293b', 'wms-text': '#f8fafc', 'wms-accent': '#22c55e' } } } }
+    </script>
+    <style>
+        .leaflet-popup-content-wrapper { background-color: #1e293b; color: #f8fafc; border: 1px solid #334155; }
+        .leaflet-popup-tip { background-color: #1e293b; border: 1px solid #334155; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
 </head>
-<body>
-$END$
+<body class="bg-wms-bg text-wms-text flex h-screen overflow-hidden font-sans">
+
+<div th:replace="~{fragments/sidebar :: sidebar('simulator')}"></div>
+
+<main class="flex-1 p-6 flex flex-col h-screen overflow-hidden">
+    <header class="mb-4 shrink-0">
+        <h1 class="text-2xl font-bold text-blue-500 flex items-center gap-2">
+            <i data-lucide="satellite" class="w-6 h-6"></i> Modul GPS Simulator
+        </h1>
+        <p class="text-sm text-gray-400 mt-1">Uji coba pergerakan hewan secara real-time (Simulasi 1 detik = 5 Menit dunia nyata)</p>
+    </header>
+
+    <div class="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
+
+        <div class="w-full lg:w-1/3 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2 pb-4">
+
+            <div class="bg-wms-surface p-5 rounded-xl border border-gray-700 shrink-0">
+                <h3 class="font-bold text-lg mb-4 text-white">Panel Kendali</h3>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Pilih Satwa Target *</label>
+                        <select id="animalSelect" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                            <option value="">-- Pilih Hewan --</option>
+                            <option th:each="hewan : ${daftarHewan}" th:value="${hewan.animal_id}" th:text="${hewan.name} + ' (' + ${hewan.species_name} + ')'"></option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btnStart" onclick="mulaiSimulasi()" class="py-2.5 bg-blue-600 hover:bg-blue-500 font-bold rounded-lg text-white transition-colors cursor-pointer flex justify-center items-center gap-2">
+                            <i data-lucide="play" class="w-4 h-4"></i> Mulai
+                        </button>
+                        <button id="btnStop" onclick="hentikanSimulasi()" disabled class="py-2.5 bg-gray-700 text-gray-400 font-bold rounded-lg transition-colors cursor-not-allowed flex justify-center items-center gap-2">
+                            <i data-lucide="square" class="w-4 h-4"></i> Hentikan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-wms-surface p-5 rounded-xl border border-gray-700 flex-1 flex flex-col min-h-[250px]">
+                <h3 class="font-bold text-sm mb-3 flex items-center gap-2 shrink-0 text-gray-300">
+                    <i data-lucide="terminal" class="w-4 h-4"></i> Log Transmisi GPS
+                </h3>
+                <div id="logArea" class="flex-1 bg-gray-900 border border-gray-800 rounded-lg p-3 overflow-y-auto custom-scrollbar font-mono text-xs space-y-2 text-gray-400">
+                    <div class="text-center italic opacity-50 py-4">Menunggu simulasi dimulai...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-2/3 bg-gray-900 border border-gray-700 rounded-xl relative overflow-hidden min-h-[500px]">
+            <div id="map" class="absolute inset-0 z-10"></div>
+            <div id="pingIndicator" class="hidden absolute top-4 right-4 z-20 bg-blue-600/90 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.8)]">
+                <span class="w-2 h-2 rounded-full bg-white animate-ping"></span> Mengirim Data...
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script th:inline="javascript">
+    lucide.createIcons();
+
+    // 1. Inisialisasi Peta (Default di area Indonesia/Taman Nasional)
+    const map = L.map('map').setView([-2.5, 118.0], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    let marker;
+    let pathLine;
+    let intervalId;
+    let currentLat = -2.5;
+    let currentLng = 118.0;
+    const pathCoords = [];
+
+    // 2. Fungsi Log Terminal
+    function tambahLog(pesan, tipe = 'info') {
+        const logArea = document.getElementById('logArea');
+        if(logArea.innerHTML.includes('Menunggu')) logArea.innerHTML = ''; // Hapus teks default
+
+        const waktu = new Date().toLocaleTimeString('id-ID');
+        const warna = tipe === 'sukses' ? 'text-green-400' : (tipe === 'error' ? 'text-red-400' : 'text-blue-300');
+
+        logArea.innerHTML = `<div class="border-b border-gray-800 pb-1 mb-1"><span class="text-gray-500">[${waktu}]</span> <span class="${warna}">${pesan}</span></div>` + logArea.innerHTML;
+    }
+
+    // 3. Fungsi Utama: Mulai Simulasi
+    function mulaiSimulasi() {
+        const animalId = document.getElementById('animalSelect').value;
+        if(!animalId) {
+            alert('Harap pilih satwa target terlebih dahulu!');
+            return;
+        }
+
+        // Ubah UI Tombol
+        document.getElementById('animalSelect').disabled = true;
+        document.getElementById('btnStart').disabled = true;
+        document.getElementById('btnStart').classList.replace('bg-blue-600', 'bg-gray-700');
+        document.getElementById('btnStop').disabled = false;
+        document.getElementById('btnStop').classList.replace('bg-gray-700', 'bg-red-600');
+        document.getElementById('btnStop').classList.remove('cursor-not-allowed');
+
+        tambahLog('Memulai satelit pelacakan...', 'info');
+
+        // Buat Marker Pertama kali
+        if(marker) map.removeLayer(marker);
+        if(pathLine) map.removeLayer(pathLine);
+        pathCoords.length = 0; // Reset rute
+
+        marker = L.marker([currentLat, currentLng]).addTo(map).bindPopup("Titik Simulasi Aktif").openPopup();
+        pathLine = L.polyline([], {color: 'blue'}).addTo(map);
+
+        // Simulasi Interval Waktu (Setiap 2 Detik = Mengirim Data Baru)
+        intervalId = setInterval(() => generateTitikBaru(animalId), 2000);
+    }
+
+    // 4. Fungsi Utama: Hentikan Simulasi
+    function hentikanSimulasi() {
+        clearInterval(intervalId);
+
+        // Kembalikan UI Tombol
+        document.getElementById('animalSelect').disabled = false;
+        document.getElementById('btnStart').disabled = false;
+        document.getElementById('btnStart').classList.replace('bg-gray-700', 'bg-blue-600');
+        document.getElementById('btnStop').disabled = true;
+        document.getElementById('btnStop').classList.replace('bg-red-600', 'bg-gray-700');
+        document.getElementById('btnStop').classList.add('cursor-not-allowed');
+
+        document.getElementById('pingIndicator').classList.add('hidden');
+        tambahLog('Simulasi dihentikan pengguna.', 'error');
+    }
+
+    // 5. Otak Simulasi: Berjalan Acak (Random Walk) & Kirim ke Backend
+    function generateTitikBaru(animalId) {
+        // Efek Ping Visual
+        const ping = document.getElementById('pingIndicator');
+        ping.classList.remove('hidden');
+        setTimeout(() => ping.classList.add('hidden'), 800);
+
+        // Bergeser sedikit dari titik sebelumnya secara acak
+        currentLat += (Math.random() - 0.5) * 0.05;
+        currentLng += (Math.random() - 0.5) * 0.05;
+
+        // Update Peta
+        const newLatLng = new L.LatLng(currentLat, currentLng);
+        marker.setLatLng(newLatLng);
+        pathCoords.push(newLatLng);
+        pathLine.setLatLngs(pathCoords);
+        map.panTo(newLatLng); // Kamera ngikutin marker
+
+        // Format data untuk dikirim ke Backend Java
+        const formData = new URLSearchParams();
+        formData.append('animalId', animalId);
+        formData.append('latitude', currentLat.toFixed(5));
+        formData.append('longitude', currentLng.toFixed(5));
+
+        // Kirim diam-diam menggunakan FETCH API
+        fetch('/simulator/kirim-titik', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    tambahLog(`[SIMULASI 5 MNT] Lat: ${currentLat.toFixed(4)}, Lng: ${currentLng.toFixed(4)} terkirim.`, 'sukses');
+                } else {
+                    tambahLog(`Gagal menyimpan: ${data.pesan}`, 'error');
+                }
+            })
+            .catch(error => tambahLog('Koneksi ke server terputus!', 'error'));
+    }
+</script>
 </body>
 </html>
