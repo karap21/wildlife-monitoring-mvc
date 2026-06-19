@@ -1,0 +1,69 @@
+Folder PATH listing for volume DATA
+Volume serial number is 00000033 32EC:E528
+D:.
+|   .gitignore
+|   pom.xml
+|   struktur_folder.txt
+|   
++---.idea
+|       .gitignore
+|       compiler.xml
+|       encodings.xml
+|       jarRepositories.xml
+|       misc.xml
+|       vcs.xml
+|       workspace.xml
+|       
++---.mvn
++---src
+|   +---main
+|   |   +---java
+|   |   |   +---com
+|   |   |   |   \---wildlife_tracker
+|   |   |   |       \---backend
+|   |   |   |           |   BackendApplication.java
+|   |   |   |           |   
+|   |   |   |           +---controller
+|   |   |   |           |       DashboardController.java
+|   |   |   |           |       SpesiesController.java
+|   |   |   |           |       
+|   |   |   |           +---exception
+|   |   |   |           +---model
+|   |   |   |           +---repository
+|   |   |   |           |       AkunRepository.java
+|   |   |   |           |       MasterDataRepository.java
+|   |   |   |           |       
+|   |   |   |           +---service
+|   |   |   |           |   \---impl
+|   |   |   |           \---util
+|   |   |   \---org
+|   |   |       \---example
+|   |   \---resources
+|   |       |   application.properties
+|   |       |   
+|   |       +---static
+|   |       |   +---css
+|   |       |   +---images
+|   |       |   \---js
+|   |       \---templates
+|   |           +---fragments
+|   |           |       sidebar.html
+|   |           |       
+|   |           \---hewan
+|   |                   spesies.html
+|   |                   
+|   \---test
+|       \---java
+\---target
+    +---classes
+    |   |   application.properties
+    |   |   
+    |   \---templates
+    |       +---fragments
+    |       |       sidebar.html
+    |       |       
+    |       \---hewan
+    |               spesies.html
+    |               
+    \---generated-sources
+        \---annotations
