@@ -1,91 +1,91 @@
 [ {
-  "animal_id" : "3",
-  "nama_hewan" : "Koba",
-  "latitude" : -1.632530091032925,
-  "longitude" : 103.85696019431093,
-  "timestamp" : "2026-06-21T14:15:13.094Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.343060728083819,
+  "longitude" : 97.56303351151143,
+  "timestamp" : "2026-06-22T07:01:00.213Z"
 }, {
-  "animal_id" : "2",
-  "nama_hewan" : "gurak",
-  "latitude" : -1.610427529352743,
-  "longitude" : 103.83566701412147,
-  "timestamp" : "2026-06-21T14:15:13.095Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.346360226854262,
+  "longitude" : 97.56070379450473,
+  "timestamp" : "2026-06-22T07:01:02.208Z"
 }, {
-  "animal_id" : "1",
-  "nama_hewan" : "Simba",
-  "latitude" : -1.6149114949017793,
-  "longitude" : 103.83495684141648,
-  "timestamp" : "2026-06-21T14:15:13.096Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.345430309795498,
+  "longitude" : 97.5607038312533,
+  "timestamp" : "2026-06-22T07:01:04.209Z"
 }, {
-  "animal_id" : "3",
-  "nama_hewan" : "Koba",
-  "latitude" : -1.6326059717201062,
-  "longitude" : 103.85474592639032,
-  "timestamp" : "2026-06-21T14:15:15.099Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.345097608143765,
+  "longitude" : 97.56008709420938,
+  "timestamp" : "2026-06-22T07:01:06.210Z"
 }, {
-  "animal_id" : "2",
-  "nama_hewan" : "gurak",
-  "latitude" : -1.6076781565441092,
-  "longitude" : 103.84043646286638,
-  "timestamp" : "2026-06-21T14:15:15.100Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.344924950760284,
+  "longitude" : 97.56425200467136,
+  "timestamp" : "2026-06-22T07:01:08.208Z"
 }, {
-  "animal_id" : "1",
-  "nama_hewan" : "Simba",
-  "latitude" : -1.6120669042496016,
-  "longitude" : 103.8379292071151,
-  "timestamp" : "2026-06-21T14:15:15.100Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.345689611728424,
+  "longitude" : 97.55964515408182,
+  "timestamp" : "2026-06-22T07:01:10.211Z"
 }, {
-  "animal_id" : "3",
-  "nama_hewan" : "Koba",
-  "latitude" : -1.6295444378275266,
-  "longitude" : 103.85424300810644,
-  "timestamp" : "2026-06-21T14:15:17.096Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.349238182167968,
+  "longitude" : 97.55835517433003,
+  "timestamp" : "2026-06-22T07:01:12.213Z"
 }, {
-  "animal_id" : "2",
-  "nama_hewan" : "gurak",
-  "latitude" : -1.6071000268337134,
-  "longitude" : 103.83700151630208,
-  "timestamp" : "2026-06-21T14:15:17.097Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.3492584191630455,
+  "longitude" : 97.56293842482008,
+  "timestamp" : "2026-06-22T07:01:14.209Z"
 }, {
-  "animal_id" : "1",
-  "nama_hewan" : "Simba",
-  "latitude" : -1.6111523389156135,
-  "longitude" : 103.83752861507482,
-  "timestamp" : "2026-06-21T14:15:17.097Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.349206051758616,
+  "longitude" : 97.56013539638357,
+  "timestamp" : "2026-06-22T07:01:16.207Z"
 }, {
-  "animal_id" : "3",
-  "nama_hewan" : "Koba",
-  "latitude" : -1.6341871068985487,
-  "longitude" : 103.85850382075769,
-  "timestamp" : "2026-06-21T14:15:19.096Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.353013364789343,
+  "longitude" : 97.55769651904559,
+  "timestamp" : "2026-06-22T07:01:18.206Z"
 }, {
-  "animal_id" : "2",
-  "nama_hewan" : "gurak",
-  "latitude" : -1.6060241703326537,
-  "longitude" : 103.84025325978268,
-  "timestamp" : "2026-06-21T14:15:19.097Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.350142320708945,
+  "longitude" : 97.55610490390275,
+  "timestamp" : "2026-06-22T07:01:20.206Z"
 }, {
-  "animal_id" : "1",
-  "nama_hewan" : "Simba",
-  "latitude" : -1.6106684465684116,
-  "longitude" : 103.83770049495492,
-  "timestamp" : "2026-06-21T14:15:19.097Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.347194093704392,
+  "longitude" : 97.55827157337768,
+  "timestamp" : "2026-06-22T07:01:22.207Z"
 }, {
-  "animal_id" : "3",
-  "nama_hewan" : "Koba",
-  "latitude" : -1.6295898089467586,
-  "longitude" : 103.86100646219971,
-  "timestamp" : "2026-06-21T14:15:21.096Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.3468537189442396,
+  "longitude" : 97.56173732460631,
+  "timestamp" : "2026-06-22T07:01:24.210Z"
 }, {
-  "animal_id" : "2",
-  "nama_hewan" : "gurak",
-  "latitude" : -1.607365277909565,
-  "longitude" : 103.84142967667299,
-  "timestamp" : "2026-06-21T14:15:21.096Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.347441104038964,
+  "longitude" : 97.56035901457068,
+  "timestamp" : "2026-06-22T07:01:26.212Z"
 }, {
-  "animal_id" : "1",
-  "nama_hewan" : "Simba",
-  "latitude" : -1.6093022093226377,
-  "longitude" : 103.83819778652784,
-  "timestamp" : "2026-06-21T14:15:21.097Z"
+  "animal_id" : "4",
+  "nama_hewan" : "kiko",
+  "latitude" : 4.348124542536589,
+  "longitude" : 97.56267216528559,
+  "timestamp" : "2026-06-22T07:01:28.205Z"
 } ]

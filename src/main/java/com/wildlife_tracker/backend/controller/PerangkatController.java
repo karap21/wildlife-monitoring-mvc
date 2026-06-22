@@ -22,14 +22,10 @@ public class PerangkatController {
     private final PerangkatRepository perangkatRepo;
     private final HewanRepository hewanRepo;
 
-    // FUNGSI 1: Tampil Halaman dengan Cek Permission (BUKAN Role)
     @GetMapping
     public String tampilkanPerangkat(HttpSession session, Model model) {
         List<String> izin = (List<String>) session.getAttribute("userPermissions");
-
-        // Jika tidak punya izin 'manage_devices', tendang!
         if (izin == null || !izin.contains("manage_devices")) {
-            // (Fallback sementara ke cek Role lama jika tabel permission belum siap)
             String role = (String) session.getAttribute("userRole");
             if (role == null || "PENELITI".equals(role)) return "redirect:/";
         }
@@ -39,13 +35,18 @@ public class PerangkatController {
         return "hewan/perangkat";
     }
 
+    // --- PERBAIKAN BUG 400 BAD REQUEST ADA DI SINI ---
     @PostMapping("/simpan")
     public String simpanPerangkat(HttpSession session,
                                   @RequestParam(required = false) Long deviceId,
-                                  @RequestParam Long animalId,
-                                  @RequestParam String modelType,
-                                  @RequestParam String serialNumber,
-                                  @RequestParam Integer batteryLife,
+
+                                  // Mengizinkan animalId kosong (null) jika perangkat belum dipasang ke hewan
+                                  @RequestParam(required = false) Long animalId,
+
+                                  // Memberikan nilai default sementara jika name HTML tidak cocok
+                                  @RequestParam(required = false, defaultValue = "GPS-Model") String modelType,
+                                  @RequestParam(required = false, defaultValue = "SN-XXXX") String serialNumber,
+                                  @RequestParam(required = false, defaultValue = "12") Integer batteryLife,
                                   @RequestParam(required = false) String installDate,
                                   RedirectAttributes redirectAttributes) {
 
@@ -62,7 +63,7 @@ public class PerangkatController {
                 perangkatRepo.updatePerangkat(deviceId, animalId, modelType, serialNumber, batteryLife, installDate);
             }
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Gagal menyimpan data perangkat.");
+            redirectAttributes.addFlashAttribute("error", "Gagal menyimpan data: " + e.getMessage());
         }
         return "redirect:/perangkat";
     }
