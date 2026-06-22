@@ -16,47 +16,42 @@ public class SimulatorRepository {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public void tembakSinyalGps(Long deviceId, Double latitude, Double longitude) {
-        // 1. Simpan ke Riwayat
         jdbcTemplate.update("INSERT INTO gps_readings (device_id, latitude, longitude, altitude_meters, accuracy_meters, recorded_at, created_at, updated_at) VALUES (?, ?, ?, 15, 5.0, NOW(), NOW(), NOW())", deviceId, latitude, longitude);
-        jdbcTemplate.update("UPDATE tracking_devices SET last_seen = NOW() WHERE device_id = ?", deviceId);
+        jdbcTemplate.update("UPDATE tracking_devices SET last_seen = NOW(), battery_level = GREATEST(0, battery_level - 0.05) WHERE device_id = ?", deviceId);
 
-        // 2. Cari Animal ID dari Device ini
         Long animalId = jdbcTemplate.queryForObject("SELECT animal_id FROM tracking_devices WHERE device_id = ?", Long.class, deviceId);
 
         if (animalId != null) {
-            // 3. Tarik semua Zona Aman (Geozone) milik Hewan ini
             String sqlZona = "SELECT g.name, g.polygon_coordinates FROM geozones g JOIN animal_geozones ag ON g.zone_id = ag.zone_id WHERE ag.animal_id = ?";
             List<Map<String, Object>> daftarZona = jdbcTemplate.queryForList(sqlZona, animalId);
 
-            boolean isAman = daftarZona.isEmpty(); // Jika tidak punya zona, anggap aman
+            boolean isAman = true;
 
-            for (Map<String, Object> zona : daftarZona) {
-                String polygonJson = (String) zona.get("polygon_coordinates");
-                String namaZona = (String) zona.get("name");
+            if (!daftarZona.isEmpty()) {
+                isAman = false;
+                for (Map<String, Object> zona : daftarZona) {
+                    String namaZona = (String) zona.get("name");
+                    String polyJson = (String) zona.get("polygon_coordinates");
 
-                try {
-                    // Konversi String JSON menjadi Array List of List [lat, lng]
-                    List<List<Double>> polygon = objectMapper.readValue(polygonJson, new TypeReference<List<List<Double>>>(){});
-
-                    // ALGORITMA RAY-CASTING: Mengecek apakah titik (lat, lng) ada di dalam Poligon
-                    if (apakahDiDalamPoligon(latitude, longitude, polygon)) {
-                        isAman = true;
-                        break; // Jika ada di dalam setidaknya 1 zona miliknya, berarti aman
+                    try {
+                        List<List<Double>> polygon = objectMapper.readValue(polyJson, new TypeReference<List<List<Double>>>() {});
+                        if (apakahDiDalamPoligon(latitude, longitude, polygon)) {
+                            isAman = true;
+                            break;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Gagal membaca zona: " + namaZona);
                     }
-                } catch (Exception e) {
-                    System.out.println("Gagal membaca koordinat poligon zona: " + namaZona);
                 }
-            }
 
-            // 4. Jika di luar zona, ciptakan Notifikasi Pelanggaran (Alert)
-            if (!isAman) {
-                String pesan = "PERINGATAN GEOFENCE! Satwa terdeteksi keluar dari zona aman pelindungnya.";
-                jdbcTemplate.update("INSERT INTO system_alerts (animal_id, alert_type, message, is_read, created_at) VALUES (?, 'GEOFENCE_BREACH', ?, FALSE, NOW())", animalId, pesan);
+                if (!isAman) {
+                    String pesan = "PERINGATAN GEOFENCE! Satwa terdeteksi keluar dari zona aman.";
+                    jdbcTemplate.update("INSERT INTO system_alerts (animal_id, alert_type, message, is_read, created_at) VALUES (?, 'GEOFENCE_BREACH', ?, FALSE, NOW())", animalId, pesan);
+                }
             }
         }
     }
 
-    // Fungsi Matematika Spasial (Ray-Casting Algorithm)
     private boolean apakahDiDalamPoligon(double lat, double lng, List<List<Double>> polygon) {
         boolean result = false;
         int i, j = polygon.size() - 1;
@@ -71,5 +66,22 @@ public class SimulatorRepository {
             j = i;
         }
         return result;
+    }
+
+    // FUNGSI BARU 1: Menarik rekam jejak yang sudah ada agar simulator bisa "Resume"
+    public List<Map<String, Object>> ambilRiwayatEksisting() {
+        String sql = "SELECT g.latitude, g.longitude, a.animal_id, a.name " +
+                "FROM gps_readings g " +
+                "JOIN tracking_devices t ON g.device_id = t.device_id " +
+                "JOIN animals a ON t.animal_id = a.animal_id " +
+                "ORDER BY g.recorded_at ASC";
+        return jdbcTemplate.queryForList(sql);
+    }
+
+    // FUNGSI BARU 2: Menghapus semua riwayat (Reset Simulator)
+    public void resetSistemSimulasi() {
+        jdbcTemplate.update("DELETE FROM gps_readings"); // Hapus rute
+        jdbcTemplate.update("DELETE FROM system_alerts WHERE alert_type = 'GEOFENCE_BREACH'"); // Hapus notif
+        jdbcTemplate.update("UPDATE tracking_devices SET battery_level = 100, last_seen = NULL"); // Isi full baterai
     }
 }

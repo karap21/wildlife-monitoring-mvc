@@ -1,0 +1,158 @@
+Folder PATH listing for volume DATA
+Volume serial number is 00000098 32EC:E528
+D:.
+|   .gitignore
+|   pom.xml
+|   struktur.txt
+|   struktur_folder.txt
+|   struktur_proyek.txt
+|   
++---.idea
+|       .gitignore
+|       compiler.xml
+|       encodings.xml
+|       jarRepositories.xml
+|       misc.xml
+|       vcs.xml
+|       workspace.xml
+|       
++---.mvn
++---src
+|   +---main
+|   |   +---java
+|   |   |   \---com
+|   |   |       \---wildlife_tracker
+|   |   |           \---backend
+|   |   |               |   BackendApplication.java
+|   |   |               |   
+|   |   |               +---controller
+|   |   |               |       AdminController.java
+|   |   |               |       AkunController.java
+|   |   |               |       DashboardController.java
+|   |   |               |       GeozoneController.java
+|   |   |               |       HewanController.java
+|   |   |               |       PelacakanController.java
+|   |   |               |       PerangkatController.java
+|   |   |               |       PeringatanController.java
+|   |   |               |       RiwayatController.java
+|   |   |               |       SimulatorController.java
+|   |   |               |       SpesiesController.java
+|   |   |               |       StatistikController.java
+|   |   |               |       
+|   |   |               +---exception
+|   |   |               +---model
+|   |   |               +---repository
+|   |   |               |       AkunRepository.java
+|   |   |               |       GeozoneRepository.java
+|   |   |               |       HewanRepository.java
+|   |   |               |       MasterDataRepository.java
+|   |   |               |       PelacakanRepository.java
+|   |   |               |       PerangkatRepository.java
+|   |   |               |       RiwayatRepository.java
+|   |   |               |       RoleRepository.java
+|   |   |               |       SimulatorRepository.java
+|   |   |               |       StatistikRepository.java
+|   |   |               |       
+|   |   |               +---service
+|   |   |               |   \---impl
+|   |   |               |           AkunService.java
+|   |   |               |           ReportService.java
+|   |   |               |           
+|   |   |               \---util
+|   |   \---resources
+|   |       |   application.properties
+|   |       |   
+|   |       +---static
+|   |       |   +---css
+|   |       |   +---images
+|   |       |   \---js
+|   |       \---templates
+|   |           |   dashboard.html
+|   |           |   login.html
+|   |           |   rbac.html
+|   |           |   
+|   |           +---fragments
+|   |           |       sidebar.html
+|   |           |       
+|   |           +---hewan
+|   |           |       daftar-hewan.html
+|   |           |       perangkat.html
+|   |           |       spesies.html
+|   |           |       
+|   |           \---tracking
+|   |                   geozone.html
+|   |                   laporan-pdf.html
+|   |                   peringatan.html
+|   |                   peta.html
+|   |                   riwayat.html
+|   |                   simulator.html
+|   |                   statistik.html
+|   |                   
+|   \---test
+|       \---java
+\---target
+    +---classes
+    |   |   application.properties
+    |   |   
+    |   +---com
+    |   |   \---wildlife_tracker
+    |   |       \---backend
+    |   |           |   BackendApplication.class
+    |   |           |   
+    |   |           +---controller
+    |   |           |       AdminController.class
+    |   |           |       AkunController.class
+    |   |           |       DashboardController.class
+    |   |           |       GeozoneController.class
+    |   |           |       HewanController.class
+    |   |           |       PelacakanController.class
+    |   |           |       PerangkatController.class
+    |   |           |       PeringatanController.class
+    |   |           |       RiwayatController.class
+    |   |           |       SimulatorController.class
+    |   |           |       SpesiesController.class
+    |   |           |       StatistikController.class
+    |   |           |       
+    |   |           +---repository
+    |   |           |       AkunRepository.class
+    |   |           |       GeozoneRepository.class
+    |   |           |       HewanRepository.class
+    |   |           |       MasterDataRepository.class
+    |   |           |       PelacakanRepository.class
+    |   |           |       PerangkatRepository.class
+    |   |           |       RiwayatRepository.class
+    |   |           |       RoleRepository.class
+    |   |           |       SimulatorRepository$1.class
+    |   |           |       SimulatorRepository.class
+    |   |           |       StatistikRepository.class
+    |   |           |       
+    |   |           \---service
+    |   |               |   ReportService.class
+    |   |               |   
+    |   |               \---impl
+    |   |                       AkunService.class
+    |   |                       
+    |   \---templates
+    |       |   dashboard.html
+    |       |   login.html
+    |       |   rbac.html
+    |       |   
+    |       +---fragments
+    |       |       sidebar.html
+    |       |       
+    |       +---hewan
+    |       |       daftar-hewan.html
+    |       |       perangkat.html
+    |       |       spesies.html
+    |       |       
+    |       \---tracking
+    |               geozone.html
+    |               laporan-pdf.html
+    |               peringatan.html
+    |               peta.html
+    |               riwayat.html
+    |               simulator.html
+    |               statistik.html
+    |               
+    \---generated-sources
+        \---annotations

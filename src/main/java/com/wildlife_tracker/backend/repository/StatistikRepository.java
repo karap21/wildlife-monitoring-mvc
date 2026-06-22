@@ -12,7 +12,7 @@ public class StatistikRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    // --- FUNGSI LAMA (JANGAN DIHAPUS) ---
+    // --- FUNGSI LAMA (TETAP DIPERTAHANKAN) ---
     public long count(String table) {
         return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + table, Long.class);
     }
@@ -21,11 +21,19 @@ public class StatistikRepository {
         return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM animals WHERE is_active = TRUE", Long.class);
     }
 
-    // --- FUNGSI BARU UNTUK GRAFIK PENELITI ---
     public List<Map<String, Object>> ambilDataPopulasiSpesies() {
         String sql = "SELECT s.common_name AS label, COUNT(a.animal_id) AS value " +
                 "FROM species s LEFT JOIN animals a ON s.species_id = a.species_id " +
                 "GROUP BY s.species_id, s.common_name";
         return jdbcTemplate.queryForList(sql);
+    }
+
+    // --- FUNGSI BARU: MENGHITUNG PERINGATAN ---
+    public long countUnreadAlerts() {
+        try {
+            return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM system_alerts WHERE is_read = 0", Long.class);
+        } catch (Exception e) {
+            return 0L;
+        }
     }
 }

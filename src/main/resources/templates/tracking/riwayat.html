@@ -18,6 +18,9 @@
         #map { height: calc(100vh - 16rem); width: 100%; border-radius: 0.75rem; z-index: 10; }
         .leaflet-popup-content-wrapper { background-color: #1e293b; color: #f8fafc; border: 1px solid #334155; }
         .leaflet-popup-tip { background-color: #1e293b; border: 1px solid #334155; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-wms-bg text-wms-text flex h-screen overflow-hidden font-sans">
@@ -27,20 +30,32 @@
 <main class="flex-1 overflow-y-auto p-8 flex flex-col">
     <header class="mb-6">
         <h1 class="text-2xl font-bold text-wms-accent">Historical GPS Tracking</h1>
-        <p class="text-sm text-gray-400 mt-1">Analisis pola pergerakan dan rute perjalanan satwa</p>
+        <p class="text-sm text-gray-400 mt-1">Analisis pola pergerakan multi-satwa dalam satu peta</p>
     </header>
 
     <div class="bg-wms-surface p-4 rounded-xl border border-gray-700 mb-6">
         <form th:action="@{/riwayat}" method="GET" class="flex flex-wrap gap-4 items-end">
-            <div class="flex-1 min-w-[200px]">
-                <label class="block text-xs font-medium text-gray-400 mb-1">Pilih Satwa</label>
-                <select name="animalId" required class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-wms-accent">
-                    <option value="">-- Pilih Satwa --</option>
-                    <option th:each="hewan : ${daftarHewan}"
-                            th:value="${hewan.animal_id}"
-                            th:text="${hewan.name} + ' (' + ${hewan.species_name} + ')'"
-                            th:selected="${hewan.animal_id == selectedAnimal}"></option>
-                </select>
+
+            <div class="relative min-w-[250px]" id="dropdownContainer">
+                <label class="block text-xs font-medium text-gray-400 mb-1">Pilih Satwa (Bisa Lebih Dari 1)</label>
+                <button type="button" onclick="toggleDropdown()" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-sm text-left text-white focus:outline-none focus:border-wms-accent flex justify-between items-center cursor-pointer">
+                    <span id="filterLabel" class="truncate">-- Pilih Satwa --</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 shrink-0 ml-2"></i>
+                </button>
+
+                <div id="dropdownMenu" class="hidden absolute left-0 z-50 w-full mt-2 bg-gray-900 border border-gray-600 rounded-lg shadow-2xl max-h-64 overflow-y-auto custom-scrollbar p-2">
+                    <div class="space-y-1">
+                        <label th:each="hewan : ${daftarHewan}" class="flex items-start gap-3 cursor-pointer hover:bg-gray-800 p-2.5 rounded-md transition-colors border border-transparent hover:border-gray-700">
+                            <input type="checkbox" name="animalIds" th:value="${hewan.animal_id}"
+                                   th:checked="${selectedAnimals != null and #lists.contains(selectedAnimals, hewan.animal_id)}"
+                                   class="mt-0.5 w-4 h-4 text-wms-accent focus:ring-wms-accent bg-gray-800 border-gray-600 rounded cursor-pointer">
+                            <div class="min-w-0">
+                                <span class="text-sm text-white font-medium block truncate" th:text="${hewan.name}">Nama Hewan</span>
+                                <span class="text-[10px] text-gray-400 block truncate" th:text="${hewan.species_name}">Spesies</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -54,15 +69,13 @@
             </div>
 
             <div class="flex gap-2">
-                <button type="submit" class="px-6 py-2 bg-wms-accent hover:bg-green-600 text-white font-bold rounded-lg flex items-center gap-2 transition-colors">
+                <button type="submit" class="px-6 py-2 bg-wms-accent hover:bg-green-600 text-white font-bold rounded-lg flex items-center gap-2 transition-colors cursor-pointer shadow-lg shadow-green-500/20">
                     <i data-lucide="search" class="w-4 h-4"></i> Tampilkan Rute
                 </button>
 
-                <a th:if="${selectedAnimal != null}"
-                   th:href="@{/riwayat/export(animalId=${selectedAnimal}, startDate=${startDate}, endDate=${endDate})}"
-                   class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg flex items-center gap-2 transition-colors">
+                <button type="submit" formaction="/riwayat/export" th:if="${selectedAnimals != null and not #lists.isEmpty(selectedAnimals)}" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg flex items-center gap-2 transition-colors cursor-pointer">
                     <i data-lucide="download" class="w-4 h-4"></i> Export CSV
-                </a>
+                </button>
             </div>
         </form>
     </div>
@@ -81,39 +94,88 @@
 <script th:inline="javascript">
     lucide.createIcons();
 
+    // --- SCRIPT DROPDOWN CHECKBOX UI ---
+    function toggleDropdown() {
+        document.getElementById('dropdownMenu').classList.toggle('hidden');
+    }
+
+    document.addEventListener('click', function(event) {
+        const container = document.getElementById('dropdownContainer');
+        if (container && !container.contains(event.target)) {
+            document.getElementById('dropdownMenu').classList.add('hidden');
+        }
+        updateLabel();
+    });
+
+    function updateLabel() {
+        const checkboxes = document.querySelectorAll('input[name="animalIds"]:checked');
+        const label = document.getElementById('filterLabel');
+        if(checkboxes.length === 0) {
+            label.innerText = '-- Pilih Satwa --';
+            label.classList.remove('text-wms-accent', 'font-bold');
+        } else {
+            label.innerText = checkboxes.length + ' Satwa Dipilih';
+            label.classList.add('text-wms-accent', 'font-bold');
+        }
+    }
+    document.addEventListener('DOMContentLoaded', updateLabel);
+
+    // --- SCRIPT PETA MULTI-RUTE ---
     const riwayatData = /*[[${dataRiwayat}]]*/ [];
 
     if (riwayatData && riwayatData.length > 0) {
-        // Inisialisasi Peta
         const map = L.map('map').setView([-2.5, 118.0], 5);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        const titikKoordinat = [];
-        const circleOptions = { color: '#ef4444', fillColor: '#ef4444', fillOpacity: 1, radius: 4 };
-
-        // Gambar titik-titik singgah
+        // 1. Kelompokkan koordinat berdasarkan ID Hewan
+        const groupedData = {};
         riwayatData.forEach(pos => {
-            const lat = parseFloat(pos.latitude);
-            const lng = parseFloat(pos.longitude);
+            if (!groupedData[pos.animal_id]) {
+                groupedData[pos.animal_id] = { name: pos.animal_name, coords: [] };
+            }
+            groupedData[pos.animal_id].coords.push(pos);
+        });
 
-            if (!isNaN(lat) && !isNaN(lng)) {
-                titikKoordinat.push([lat, lng]);
+        // 2. Siapkan palet warna agar rute tiap hewan tidak tertukar
+        const colors = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316'];
+        let colorIndex = 0;
+        const allBounds = [];
 
-                const waktu = new Date(pos.recorded_at).toLocaleString();
-                const popupHTML = `<div class="text-sm"><b>Waktu:</b> ${waktu}<br><b>Alt:</b> ${pos.altitude_meters || 0} m</div>`;
+        // 3. Gambar garis untuk masing-masing hewan
+        Object.keys(groupedData).forEach(aId => {
+            const animal = groupedData[aId];
+            const color = colors[colorIndex % colors.length];
+            colorIndex++;
 
-                L.circleMarker([lat, lng], circleOptions).addTo(map).bindPopup(popupHTML);
+            const latlngs = [];
+
+            animal.coords.forEach(pos => {
+                const lat = parseFloat(pos.latitude);
+                const lng = parseFloat(pos.longitude);
+
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    latlngs.push([lat, lng]);
+                    const waktu = new Date(pos.recorded_at).toLocaleString('id-ID');
+                    const popupHTML = `<div class="text-sm"><b>${animal.name}</b><br><b>Waktu:</b> ${waktu}<br><b>Alt:</b> ${pos.altitude_meters || 0} m</div>`;
+
+                    L.circleMarker([lat, lng], { color: color, fillColor: color, fillOpacity: 1, radius: 4 }).addTo(map).bindPopup(popupHTML);
+                }
+            });
+
+            // Tarik Garis
+            if (latlngs.length > 0) {
+                const polyline = L.polyline(latlngs, { color: color, weight: 3, opacity: 0.8 }).addTo(map);
+                allBounds.push(polyline.getBounds());
             }
         });
 
-        // Tarik garis yang menghubungkan semua titik
-        if (titikKoordinat.length > 0) {
-            const polyline = L.polyline(titikKoordinat, { color: '#22c55e', weight: 3, opacity: 0.8 }).addTo(map);
-
-            // Zoom otomatis agar seluruh garis terlihat presisi di tengah layar
-            map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+        // 4. Zoom otomatis mencakup semua rute hewan
+        if (allBounds.length > 0) {
+            const masterBounds = allBounds[0];
+            for (let i = 1; i < allBounds.length; i++) {
+                masterBounds.extend(allBounds[i]);
+            }
+            map.fitBounds(masterBounds, { padding: [50, 50] });
         }
     }
 </script>

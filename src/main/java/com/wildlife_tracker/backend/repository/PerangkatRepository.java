@@ -33,7 +33,18 @@ public class PerangkatRepository {
         jdbcTemplate.update(sql, animalId, model, serialNumber, batteryLife, finalDate, deviceId);
     }
 
-    public void hapusPerangkat(Long deviceId) {
-        jdbcTemplate.update("DELETE FROM tracking_devices WHERE device_id = ?", deviceId);
+    public void hapusPerangkat(Long id) {
+        jdbcTemplate.update("DELETE FROM tracking_devices WHERE device_id = ?", id);
+    }
+
+    // --- FUNGSI BARU YANG HILANG (DIBUTUHKAN OLEH SIMULATOR) ---
+    // Fungsi ini bertugas mencari ID Perangkat GPS berdasarkan ID Hewan
+    public Long cariDeviceIdOlehAnimalId(Long animalId) {
+        String sql = "SELECT device_id FROM tracking_devices WHERE animal_id = ? LIMIT 1";
+        try {
+            return jdbcTemplate.queryForObject(sql, Long.class, animalId);
+        } catch (Exception e) {
+            return null; // Mengembalikan null jika hewan tidak memiliki perangkat
+        }
     }
 }

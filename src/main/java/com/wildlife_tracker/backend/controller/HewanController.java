@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/hewan")
@@ -19,17 +22,18 @@ public class HewanController {
     @GetMapping
     public String tampilkanHalamanHewan(HttpSession session, Model model,
                                         @RequestParam(required = false) String search,
-                                        @RequestParam(required = false) Long filterSpesies) { // Parameter baru ditangkap di sini
+                                        @RequestParam(required = false) List<Long> filterSpesies) { // DIUBAH MENJADI LIST
 
-        if (session.getAttribute("userRole") == null) return "redirect:/login";
+        if (!"ADMINISTRATOR".equals(session.getAttribute("userRole"))) {
+            return "redirect:/";
+        }
 
-        // Memanggil repo yang sudah diupdate dengan 2 parameter
         model.addAttribute("daftarHewan", hewanRepo.ambilSemuaHewan(search, filterSpesies));
         model.addAttribute("daftarSpesies", masterRepo.ambilSemuaSpesies(null));
+        model.addAttribute("daftarStatus", masterRepo.ambilSemuaStatusKonservasi());
 
-        // Simpan nilai agar tidak reset saat halaman di-refresh
         model.addAttribute("keywordPencarian", search);
-        model.addAttribute("spesiesTerpilih", filterSpesies);
+        model.addAttribute("spesiesTerpilih", filterSpesies); // Menyimpan state checklist
 
         return "hewan/daftar-hewan";
     }
@@ -38,18 +42,29 @@ public class HewanController {
     public String simpanAtauUpdateHewan(@RequestParam(required = false) Long id,
                                         @RequestParam String name,
                                         @RequestParam Long speciesId,
+                                        @RequestParam(required = false) String customSpeciesName,
+                                        @RequestParam(required = false) String customScientificName,
+                                        @RequestParam(required = false) Long customStatusId,
                                         @RequestParam String gender,
                                         @RequestParam(required = false) String birthDate,
-                                        @RequestParam(required = false) Boolean isActive) {
+                                        @RequestParam(required = false) Boolean isActive,
+                                        RedirectAttributes redirectAttributes) {
+        try {
+            boolean statusAktif = isActive != null;
+            Long finalSpeciesId = speciesId;
 
-        boolean statusAktif = isActive != null;
+            if (speciesId == -1L && customSpeciesName != null && !customSpeciesName.isEmpty()) {
+                finalSpeciesId = masterRepo.tambahSpesiesGetId(customSpeciesName, customScientificName, customStatusId);
+            }
 
-        if (id == null) {
-            hewanRepo.tambahHewan(name, speciesId, birthDate, gender, statusAktif);
-        } else {
-            hewanRepo.updateHewan(id, name, speciesId, birthDate, gender, statusAktif);
+            if (id == null) {
+                hewanRepo.tambahHewan(name, finalSpeciesId, birthDate, gender, statusAktif);
+            } else {
+                hewanRepo.updateHewan(id, name, finalSpeciesId, birthDate, gender, statusAktif);
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Terjadi kesalahan sistem saat menyimpan data hewan.");
         }
-
         return "redirect:/hewan";
     }
 

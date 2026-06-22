@@ -1,5 +1,8 @@
 package com.wildlife_tracker.backend.repository;
 
+import com.wildlife_tracker.backend.model.AkunPegawai;
+import com.wildlife_tracker.backend.model.Administrator;
+import com.wildlife_tracker.backend.model.Peneliti;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import lombok.RequiredArgsConstructor;
@@ -21,20 +24,29 @@ public class AkunRepository {
         }
     }
 
-    // FUNGSI LOGIN YANG SUDAH DIPERBAIKI
-    // Langsung membaca kolom 'role' dari tabel 'akun' Anda
-    public Map<String, Object> validasiLogin(String email, String password) {
+    public AkunPegawai validasiLogin(String email, String password) {
         String sql = "SELECT id, nama_lengkap, email, role FROM akun WHERE email = ? AND password = ?";
         try {
-            return jdbcTemplate.queryForMap(sql, email, password);
+            Map<String, Object> row = jdbcTemplate.queryForMap(sql, email, password);
+            Long id = ((Number) row.get("id")).longValue();
+            String nama = (String) row.get("nama_lengkap");
+            String mail = (String) row.get("email");
+            String role = (String) row.get("role");
+
+            if ("ADMINISTRATOR".equalsIgnoreCase(role)) {
+                return new Administrator(id, nama, mail);
+            } else if ("PENELITI".equalsIgnoreCase(role)) {
+                return new Peneliti(id, nama, mail);
+            }
+            return null;
         } catch (Exception e) {
             return null;
         }
     }
 
-    // Fungsi untuk fitur manajemen admin
+    // FUNGSI INI YANG DIPERBAIKI (Penyesuaian dengan Database baru)
     public List<Map<String, Object>> ambilSemuaAkun() {
-        String sql = "SELECT id, username, nama_lengkap, email, role, institusi FROM akun ORDER BY id DESC";
+        String sql = "SELECT id, nama_lengkap, email, role AS nama_role FROM akun ORDER BY id DESC";
         return jdbcTemplate.queryForList(sql);
     }
 

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -13,13 +14,12 @@ public class HewanRepository {
     private final JdbcTemplate jdbcTemplate;
 
     // FUNGSI PENYELAMAT (Method Overloading)
-    // Controller lama (seperti Riwayat/Geozone) yang hanya kirim 1 parameter akan dialihkan ke sini
     public List<Map<String, Object>> ambilSemuaHewan(String keyword) {
         return ambilSemuaHewan(keyword, null);
     }
 
-    // FUNGSI UTAMA (Dengan Filter Spesies)
-    public List<Map<String, Object>> ambilSemuaHewan(String keyword, Long filterSpesies) {
+    // FUNGSI UTAMA (Diperbarui untuk mendukung Multi-Filter Spesies)
+    public List<Map<String, Object>> ambilSemuaHewan(String keyword, List<Long> filterSpesies) {
         String sql = "SELECT a.*, s.common_name AS species_name, " +
                 "td.serial_number AS linked_device " +
                 "FROM animals a " +
@@ -31,8 +31,10 @@ public class HewanRepository {
             sql += "AND (a.name LIKE '%" + keyword + "%' OR s.common_name LIKE '%" + keyword + "%') ";
         }
 
-        if (filterSpesies != null) {
-            sql += "AND a.species_id = " + filterSpesies + " ";
+        // LOGIKA BARU: Jika ada checklist yang dipilih, ubah jadi format IN (1, 2, 3)
+        if (filterSpesies != null && !filterSpesies.isEmpty()) {
+            String inSql = filterSpesies.stream().map(String::valueOf).collect(Collectors.joining(","));
+            sql += "AND a.species_id IN (" + inSql + ") ";
         }
 
         sql += "ORDER BY a.created_at DESC";
