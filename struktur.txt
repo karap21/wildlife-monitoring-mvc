@@ -1,11 +1,14 @@
 Folder PATH listing for volume DATA
-Volume serial number is 00000098 32EC:E528
+Volume serial number is 00000013 32EC:E528
 D:.
-|   .gitignore
+|   laporan_pelacakan_gps.csv
+|   Laporan_Simulasi_Satelit.json
 |   pom.xml
 |   struktur.txt
 |   struktur_folder.txt
 |   struktur_proyek.txt
+|   susunan.txt
+|   tugas.txt
 |   
 +---.idea
 |       .gitignore
@@ -20,45 +23,58 @@ D:.
 +---src
 |   +---main
 |   |   +---java
-|   |   |   \---com
-|   |   |       \---wildlife_tracker
-|   |   |           \---backend
-|   |   |               |   BackendApplication.java
-|   |   |               |   
-|   |   |               +---controller
-|   |   |               |       AdminController.java
-|   |   |               |       AkunController.java
-|   |   |               |       DashboardController.java
-|   |   |               |       GeozoneController.java
-|   |   |               |       HewanController.java
-|   |   |               |       PelacakanController.java
-|   |   |               |       PerangkatController.java
-|   |   |               |       PeringatanController.java
-|   |   |               |       RiwayatController.java
-|   |   |               |       SimulatorController.java
-|   |   |               |       SpesiesController.java
-|   |   |               |       StatistikController.java
-|   |   |               |       
-|   |   |               +---exception
-|   |   |               +---model
-|   |   |               +---repository
-|   |   |               |       AkunRepository.java
-|   |   |               |       GeozoneRepository.java
-|   |   |               |       HewanRepository.java
-|   |   |               |       MasterDataRepository.java
-|   |   |               |       PelacakanRepository.java
-|   |   |               |       PerangkatRepository.java
-|   |   |               |       RiwayatRepository.java
-|   |   |               |       RoleRepository.java
-|   |   |               |       SimulatorRepository.java
-|   |   |               |       StatistikRepository.java
-|   |   |               |       
-|   |   |               +---service
-|   |   |               |   \---impl
-|   |   |               |           AkunService.java
-|   |   |               |           ReportService.java
-|   |   |               |           
-|   |   |               \---util
+|   |   |   +---com
+|   |   |   |   \---wildlife_tracker
+|   |   |   |       \---backend
+|   |   |   |           |   BackendApplication.java
+|   |   |   |           |   
+|   |   |   |           +---controller
+|   |   |   |           |       AdminController.java
+|   |   |   |           |       AkunController.java
+|   |   |   |           |       DashboardController.java
+|   |   |   |           |       GeozoneController.java
+|   |   |   |           |       HewanController.java
+|   |   |   |           |       PelacakanController.java
+|   |   |   |           |       PerangkatController.java
+|   |   |   |           |       PeringatanController.java
+|   |   |   |           |       RiwayatController.java
+|   |   |   |           |       SimulatorController.java
+|   |   |   |           |       SpesiesController.java
+|   |   |   |           |       StatistikController.java
+|   |   |   |           |       
+|   |   |   |           +---exception
+|   |   |   |           +---model
+|   |   |   |           |       Administrator.java
+|   |   |   |           |       AkunPegawai.java
+|   |   |   |           |       Peneliti.java
+|   |   |   |           |       
+|   |   |   |           +---repository
+|   |   |   |           |       AkunRepository.java
+|   |   |   |           |       GeozoneRepository.java
+|   |   |   |           |       HewanRepository.java
+|   |   |   |           |       MasterDataRepository.java
+|   |   |   |           |       PelacakanRepository.java
+|   |   |   |           |       PerangkatRepository.java
+|   |   |   |           |       PeringatanRepository.java
+|   |   |   |           |       RiwayatRepository.java
+|   |   |   |           |       RoleRepository.java
+|   |   |   |           |       SimulatorRepository.java
+|   |   |   |           |       StatistikRepository.java
+|   |   |   |           |       
+|   |   |   |           +---service
+|   |   |   |           |   \---impl
+|   |   |   |           |           AkunService.java
+|   |   |   |           |           ReportService.java
+|   |   |   |           |           
+|   |   |   |           \---util
+|   |   |   |                   PasswordUtil.java
+|   |   |   |                   
+|   |   |   +---impl
+|   |   |   |       StatistikServiceImpl.java
+|   |   |   |       
+|   |   |   \---service
+|   |   |           StatistikService.java
+|   |   |           
 |   |   \---resources
 |   |       |   application.properties
 |   |       |   
@@ -68,6 +84,7 @@ D:.
 |   |       |   \---js
 |   |       \---templates
 |   |           |   dashboard.html
+|   |           |   laporan-pdf.html
 |   |           |   login.html
 |   |           |   rbac.html
 |   |           |   
@@ -81,7 +98,6 @@ D:.
 |   |           |       
 |   |           \---tracking
 |   |                   geozone.html
-|   |                   laporan-pdf.html
 |   |                   peringatan.html
 |   |                   peta.html
 |   |                   riwayat.html
@@ -113,6 +129,11 @@ D:.
     |   |           |       SpesiesController.class
     |   |           |       StatistikController.class
     |   |           |       
+    |   |           +---model
+    |   |           |       Administrator.class
+    |   |           |       AkunPegawai.class
+    |   |           |       Peneliti.class
+    |   |           |       
     |   |           +---repository
     |   |           |       AkunRepository.class
     |   |           |       GeozoneRepository.class
@@ -120,20 +141,27 @@ D:.
     |   |           |       MasterDataRepository.class
     |   |           |       PelacakanRepository.class
     |   |           |       PerangkatRepository.class
+    |   |           |       PeringatanRepository.class
     |   |           |       RiwayatRepository.class
     |   |           |       RoleRepository.class
     |   |           |       SimulatorRepository$1.class
     |   |           |       SimulatorRepository.class
     |   |           |       StatistikRepository.class
     |   |           |       
-    |   |           \---service
-    |   |               |   ReportService.class
-    |   |               |   
-    |   |               \---impl
-    |   |                       AkunService.class
-    |   |                       
+    |   |           +---service
+    |   |           |   |   ReportService.class
+    |   |           |   |   StatistikService.class
+    |   |           |   |   
+    |   |           |   \---impl
+    |   |           |           AkunService.class
+    |   |           |           StatistikServiceImpl.class
+    |   |           |           
+    |   |           \---util
+    |   |                   PasswordUtil.class
+    |   |                   
     |   \---templates
     |       |   dashboard.html
+    |       |   laporan-pdf.html
     |       |   login.html
     |       |   rbac.html
     |       |   
@@ -147,7 +175,6 @@ D:.
     |       |       
     |       \---tracking
     |               geozone.html
-    |               laporan-pdf.html
     |               peringatan.html
     |               peta.html
     |               riwayat.html
