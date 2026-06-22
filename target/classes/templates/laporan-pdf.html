@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Laporan Komprehensif - WildTrack</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 40px; }
+        .header { text-align: center; border-bottom: 2px solid #22c55e; padding-bottom: 20px; margin-bottom: 30px; }
+        .logo { font-size: 28px; font-weight: bold; color: #0f172a; margin-bottom: 5px; }
+        .logo span { color: #22c55e; }
+        .subtitle { color: #64748b; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+
+        .ai-box { background-color: #f8fafc; border-left: 5px solid #3b82f6; padding: 20px; margin-bottom: 40px; border-radius: 4px; }
+        .ai-title { font-weight: bold; color: #1e293b; font-size: 16px; margin-bottom: 10px; }
+        .ai-text { line-height: 1.6; color: #475569; text-align: justify; }
+
+        h3 { color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 30px; }
+
+        .data-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+        .data-table th, .data-table td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
+        .data-table th { background-color: #f1f5f9; color: #1e293b; font-weight: bold; }
+
+        /* Pewarnaan Status Dinamis */
+        .status-aman { color: #16a34a; font-weight: bold; }
+        .status-warning { color: #ea580c; font-weight: bold; }
+        .status-kritis { color: #dc2626; font-weight: bold; background-color: #fef2f2; padding: 2px 6px; border-radius: 4px; }
+        .text-center { text-align: center !important; }
+
+        .footer { text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0; padding-top: 20px; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">Wild<span>Track</span></div>
+    <div class="subtitle">Dokumen Ringkasan Konservasi Satwa Liar</div>
+</div>
+
+<div class="ai-box">
+    <div class="ai-title">🤖 Executive Summary (AI-Generated)</div>
+    <div class="ai-text" th:text="${analisisCerdas}">Sistem Analisis AI saat ini dalam mode offline. Berdasarkan data tercatat, semua instrumen pelacakan berjalan stabil di zona konservasi.</div>
+</div>
+
+<h3>1. Data Metrik Sistem</h3>
+<table class="data-table">
+    <tr>
+        <th style="width: 40%;">Tanggal Laporan Dicetak</th>
+        <td th:text="${tanggalLaporan}">2026-06-21</td>
+    </tr>
+    <tr>
+        <th>Total Populasi Satwa Dilacak</th>
+        <td th:text="${totalSatwa} + ' Ekor'">0 Ekor</td>
+    </tr>
+    <tr>
+        <th>Total Perangkat GPS Aktif</th>
+        <td th:text="${totalPerangkat} + ' Perangkat'">0 Perangkat</td>
+    </tr>
+</table>
+
+<h3>2. Distribusi Populasi Berdasarkan Spesies</h3>
+<table class="data-table">
+    <thead>
+    <tr>
+        <th>Spesies (Nama Umum)</th>
+        <th class="text-center" style="width: 30%;">Jumlah Individu</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:if="${#lists.isEmpty(statistikSpesies)}">
+        <td colspan="2" class="text-center" style="color: #64748b; font-style: italic;">Tidak ada data spesies yang tercatat.</td>
+    </tr>
+    <tr th:each="spesies : ${statistikSpesies}">
+        <td th:text="${spesies.common_name}">Nama Spesies</td>
+        <td class="text-center font-bold" th:text="${spesies.total_hewan} + ' Ekor'">0 Ekor</td>
+    </tr>
+    </tbody>
+</table>
+
+<h3>3. Rincian Kondisi Satwa & Telemetri GPS</h3>
+<table class="data-table">
+    <thead>
+    <tr>
+        <th>Nama Satwa</th>
+        <th>Spesies</th>
+        <th class="text-center">Baterai GPS</th>
+        <th class="text-center">Pelanggaran Zona</th>
+        <th>Status Pemantauan</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:if="${#lists.isEmpty(detailKondisiSatwa)}">
+        <td colspan="5" class="text-center" style="color: #64748b; font-style: italic;">Tidak ada data satwa aktif.</td>
+    </tr>
+    <tr th:each="satwa : ${detailKondisiSatwa}">
+        <td th:text="${satwa.animal_name}">Nama Hewan</td>
+        <td th:text="${satwa.species_name}">Spesies</td>
+
+        <td class="text-center" th:style="${satwa.battery_level <= 15 ? 'color: #dc2626; font-weight: bold;' : 'color: #333;'}">
+            <span th:text="${satwa.battery_level} + '%'">0%</span>
+        </td>
+
+        <td class="text-center" th:text="${satwa.total_pelanggaran} + ' Kali'">0 Kali</td>
+
+        <td>
+            <span th:if="${satwa.battery_level <= 15}" class="status-kritis">KRITIS (Kehilangan Sinyal)</span>
+
+            <span th:if="${satwa.battery_level > 15 and satwa.total_pelanggaran >= 3}" class="status-warning">RAWAN (Sering Keluar Geozone)</span>
+
+            <span th:if="${satwa.battery_level > 15 and satwa.total_pelanggaran < 3}" class="status-aman">TERPANTAU AMAN</span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="footer">
+    Dokumen ini dicetak otomatis oleh Modul Pelaporan WildTrack System.<br/>
+    &#169; 2026 WildTrack Monitoring System.
+</div>
+
+</body>
+</html>
