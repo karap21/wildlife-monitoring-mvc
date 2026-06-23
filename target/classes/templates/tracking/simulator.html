@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Simulator Pro - WildTrack</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        tailwind.config = { theme: { extend: { colors: { 'wms-bg': '#0f172a', 'wms-surface': '#1e293b', 'wms-text': '#f8fafc', 'wms-accent': '#22c55e' } } } }
+    </script>
+    <style>
+        .leaflet-popup-content-wrapper { background-color: #1e293b; color: #f8fafc; border: 1px solid #334155; }
+        .leaflet-popup-tip { background-color: #1e293b; border: 1px solid #334155; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        #map { height: calc(100vh - 10rem); width: 100%; border-radius: 0.75rem; cursor: crosshair; }
+    </style>
+</head>
+<body class="bg-wms-bg text-wms-text flex h-screen overflow-hidden font-sans">
+
+<div th:replace="~{fragments/sidebar :: sidebar('simulator')}"></div>
+
+<main class="flex-1 flex flex-col p-6 min-h-0">
+    <header class="mb-4 flex justify-between items-end shrink-0">
+        <div>
+            <h1 class="text-2xl font-bold text-wms-accent flex items-center gap-2">
+                <i data-lucide="satellite" class="w-6 h-6"></i> GPS Simulator & Recovery
+            </h1>
+            <p class="text-sm text-gray-400">Simulator persisten (melanjutkan posisi terakhir dari database)</p>
+        </div>
+
+        <form th:action="@{/simulator/reset}" method="POST" onsubmit="return confirm('BAHAYA: Ini akan menghapus histori, log peringatan, dan reset baterai. Lanjutkan?');">
+            <button type="submit" class="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/50 rounded-lg font-bold text-sm flex items-center gap-2 cursor-pointer">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset/Hapus Histori
+            </button>
+        </form>
+    </header>
+
+    <div class="flex gap-6 flex-1 min-h-0">
+        <div class="w-80 flex flex-col gap-4 h-full shrink-0">
+            <div class="bg-wms-surface p-4 rounded-xl border border-gray-700 shadow-xl flex flex-col">
+                <h3 class="font-bold text-white mb-2 flex items-center gap-2 border-b border-gray-700 pb-2 shrink-0">
+                    <i data-lucide="check-square" class="w-4 h-4 text-wms-accent"></i> Pilih Satwa
+                </h3>
+
+                <div class="overflow-y-auto custom-scrollbar space-y-2 mb-4 pr-2 max-h-[200px]">
+                    <div th:if="${#lists.isEmpty(daftarHewan)}" class="text-xs text-gray-400 italic py-2 text-center">Belum ada satwa aktif.</div>
+                    <label th:each="hewan : ${daftarHewan}" class="flex items-center gap-3 cursor-pointer hover:bg-gray-800 p-2 rounded-md border border-gray-700">
+                        <input type="checkbox" name="selectedAnimals" th:value="${hewan.animal_id}" th:data-name="${hewan.name}" class="w-4 h-4 text-wms-accent bg-gray-800 border-gray-600 rounded">
+                        <span class="text-sm text-gray-300 font-medium" th:text="${hewan.name} + ' (' + ${hewan.species_name} + ')'"></span>
+                    </label>
+                </div>
+
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-600 mb-4 shrink-0">
+                    <p class="text-xs text-gray-400 mb-1">Titik Mulai Baru (Opsional):</p>
+                    <p id="infoTitikAwal" class="text-[11px] text-gray-500">Klik peta untuk meletakkan titik start satwa baru.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 shrink-0">
+                    <button id="btnMulai" onclick="mulaiSimulasi()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-sm cursor-pointer shadow-lg">▶ Mulai / Lanjut</button>
+                    <button id="btnJeda" onclick="jedaSimulasi()" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-bold text-sm cursor-pointer hidden">⏸ Jeda</button>
+                    <button id="btnStop" onclick="hentikanSimulasi()" class="col-span-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold text-sm border border-gray-600">💾 Backup JSON Manual</button>
+                </div>
+            </div>
+
+            <div class="bg-gray-900 border border-gray-700 rounded-xl flex-1 flex flex-col shadow-inner min-h-[150px]">
+                <div class="bg-gray-800 text-xs px-3 py-1 font-mono text-gray-400 border-b border-gray-700 flex justify-between shrink-0">
+                    <span>> TERMINAL LOG</span>
+                    <button onclick="document.getElementById('logArea').innerHTML=''" class="text-gray-500 hover:text-white">Clear</button>
+                </div>
+                <div id="logArea" class="p-3 text-[10px] font-mono text-green-400 overflow-y-auto custom-scrollbar flex-1 space-y-1"></div>
+            </div>
+        </div>
+
+        <div class="flex-1 bg-wms-surface p-2 rounded-xl border border-gray-700 shadow-xl relative min-h-0">
+            <div id="map" class="h-full w-full rounded-lg"></div>
+        </div>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    lucide.createIcons();
+    const map = L.map('map').setView([-2.5, 118.0], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+
+    // =========================================================================
+    // FITUR BARU: Menggambar Geozone secara visual tanpa memblokir klik mouse!
+    // =========================================================================
+    const zonaDB = /*[[${daftarZona}]]*/ [];
+    if(zonaDB && zonaDB.length > 0) {
+        zonaDB.forEach(z => {
+            try {
+                const coords = JSON.parse(z.polygon_coordinates);
+                L.polygon(coords, {
+                    color: '#eab308',
+                    fillColor: '#eab308',
+                    fillOpacity: 0.15,
+                    weight: 2,
+                    interactive: false // KUNCI AJAIB: Membuat zona tembus klik ke peta
+                }).addTo(map);
+                // Note: bindPopup telah dihapus agar klik tidak terinterupsi
+            } catch(e) {}
+        });
+    }
+
+    let intervalSimulasi = null;
+    let titikAwalDipilih = null;
+    let markerTitikAwal = null;
+    let entitasAktif = {};
+    let keranjangJsonMaster = [];
+
+    const riwayatDB = /*[[${riwayatEksisting}]]*/ [];
+    if (riwayatDB && riwayatDB.length > 0) {
+        tambahLog(`[SISTEM] Ditemukan ${riwayatDB.length} titik riwayat lama. Memuat...`, 'info');
+        riwayatDB.forEach(pos => {
+            const aId = pos.animal_id;
+            const lat = parseFloat(pos.latitude), lng = parseFloat(pos.longitude);
+            const latLng = new L.LatLng(lat, lng);
+
+            if (!entitasAktif[aId]) {
+                entitasAktif[aId] = {
+                    nama: pos.name, lat: lat, lng: lng,
+                    marker: L.circleMarker([lat, lng], { color: '#22c55e', fillOpacity: 1, radius: 5 }).addTo(map).bindPopup(pos.name),
+                    polyline: L.polyline([], { color: '#ef4444', weight: 4, opacity: 0.8 }).addTo(map),
+                    jalurVisual: []
+                };
+            } else {
+                entitasAktif[aId].lat = lat; entitasAktif[aId].lng = lng;
+                entitasAktif[aId].marker.setLatLng(latLng);
+            }
+            entitasAktif[aId].jalurVisual.push(latLng);
+            entitasAktif[aId].polyline.setLatLngs(entitasAktif[aId].jalurVisual);
+        });
+    }
+
+    map.on('click', function(e) {
+        if (intervalSimulasi !== null) return;
+        titikAwalDipilih = { lat: e.latlng.lat, lng: e.latlng.lng };
+        if (markerTitikAwal) map.removeLayer(markerTitikAwal);
+        markerTitikAwal = L.circleMarker([e.latlng.lat, e.latlng.lng], { color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.5, radius: 8 }).addTo(map).bindPopup("Titik Awal Baru").openPopup();
+        document.getElementById('infoTitikAwal').innerText = `${titikAwalDipilih.lat.toFixed(4)}, ${titikAwalDipilih.lng.toFixed(4)}`;
+        document.getElementById('infoTitikAwal').className = "text-sm font-bold text-wms-accent";
+    });
+
+    function mulaiSimulasi() {
+        const checkboxes = document.querySelectorAll('input[name="selectedAnimals"]:checked');
+        if (checkboxes.length === 0) return alert('Pilih minimal satu satwa dari daftar!');
+
+        document.getElementById('btnMulai').classList.add('hidden');
+        document.getElementById('btnJeda').classList.remove('hidden');
+
+        let adaErrorAwal = false;
+        checkboxes.forEach(cb => {
+            const aId = cb.value, aName = cb.getAttribute('data-name');
+            if (!entitasAktif[aId]) {
+                if (!titikAwalDipilih) {
+                    alert(`Hewan ${aName} belum memiliki riwayat. Silakan klik peta untuk menentukan titik awalnya!`);
+                    adaErrorAwal = true; return;
+                }
+                const acakLat = titikAwalDipilih.lat + (Math.random() - 0.5) * 0.02, acakLng = titikAwalDipilih.lng + (Math.random() - 0.5) * 0.02;
+                entitasAktif[aId] = {
+                    nama: aName, lat: acakLat, lng: acakLng,
+                    marker: L.circleMarker([acakLat, acakLng], { color: '#22c55e', fillOpacity: 1, radius: 5 }).addTo(map).bindPopup(aName),
+                    polyline: L.polyline([], { color: '#ef4444', weight: 4, opacity: 0.8 }).addTo(map),
+                    jalurVisual: [new L.LatLng(acakLat, acakLng)]
+                };
+            }
+        });
+
+        if (adaErrorAwal) return jedaSimulasi();
+        if (markerTitikAwal) map.removeLayer(markerTitikAwal);
+
+        intervalSimulasi = setInterval(() => {
+            checkboxes.forEach(cb => {
+                const id = cb.value;
+                if(!entitasAktif[id]) return;
+                const satwa = entitasAktif[id];
+                satwa.lat += (Math.random() - 0.5) * 0.01; satwa.lng += (Math.random() - 0.5) * 0.01;
+
+                const newLatLng = new L.LatLng(satwa.lat, satwa.lng);
+                satwa.marker.setLatLng(newLatLng);
+                satwa.jalurVisual.push(newLatLng);
+                satwa.polyline.setLatLngs(satwa.jalurVisual);
+
+                keranjangJsonMaster.push({ animal_id: id, nama_hewan: satwa.nama, latitude: satwa.lat, longitude: satwa.lng, timestamp: new Date().toISOString() });
+
+                const formData = new URLSearchParams();
+                formData.append('animalId', id); formData.append('latitude', satwa.lat.toFixed(5)); formData.append('longitude', satwa.lng.toFixed(5));
+
+                fetch('/simulator/kirim-titik', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData.toString() })
+                    .then(r => r.json()).then(data => {
+                    if(data.status === 'success') tambahLog(`[PING] ${satwa.nama} -> ${satwa.lat.toFixed(3)}, ${satwa.lng.toFixed(3)}`, 'sukses');
+                    else tambahLog(`[DITOLAK] ${satwa.nama}: ${data.pesan}`, 'error');
+                });
+            });
+        }, 2000);
+    }
+
+    function jedaSimulasi() { clearInterval(intervalSimulasi); intervalSimulasi = null; document.getElementById('btnMulai').classList.remove('hidden'); document.getElementById('btnJeda').classList.add('hidden'); }
+    function hentikanSimulasi() {
+        if (!confirm('Backup JSON?')) return;
+        jedaSimulasi();
+        if (keranjangJsonMaster.length === 0) return alert('Belum ada pergerakan.');
+        fetch('/simulator/simpan-json', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(keranjangJsonMaster) })
+            .then(r => r.json()).then(data => { if(data.status === 'success') { alert('Backup tersimpan!'); keranjangJsonMaster = []; } });
+    }
+    function tambahLog(pesan, tipe) {
+        const logDiv = document.getElementById('logArea'), p = document.createElement('div');
+        p.innerText = pesan; p.className = (tipe === 'error') ? 'text-yellow-500' : (tipe === 'sukses' ? 'text-green-400' : 'text-blue-400');
+        logDiv.appendChild(p); logDiv.scrollTop = logDiv.scrollHeight;
+    }
+</script>
+</body>
+</html>

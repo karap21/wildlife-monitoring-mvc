@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen RBAC - WildTrack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { 'wms-bg': '#0f172a', 'wms-surface': '#1e293b', 'wms-text': '#f8fafc', 'wms-accent': '#22c55e' } } } }
+    </script>
+</head>
+<body class="bg-wms-bg text-wms-text flex h-screen overflow-hidden font-sans">
+
+<div th:replace="~{fragments/sidebar :: sidebar('rbac')}"></div>
+
+<main class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold text-wms-accent flex items-center gap-2">
+            <i data-lucide="shield-check" class="w-8 h-8"></i> Manajemen RBAC & Pengguna
+        </h1>
+        <p class="text-gray-400 mt-1">Pusat kendali akses (Role-Based Access Control) khusus Administrator.</p>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <div class="flex flex-col gap-6">
+            <div class="bg-wms-surface p-6 rounded-2xl border border-gray-700 shadow-lg">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="briefcase" class="text-blue-400 w-5 h-5"></i> Buat Role (Jabatan) Baru
+                </h3>
+                <form th:action="@{/admin/role/simpan}" method="POST" class="space-y-4">
+                    <div>
+                        <input type="text" name="namaRole" required placeholder="misal: DRIVER, DOKTER..." class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-wms-accent uppercase">
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 font-bold rounded-lg text-white transition-colors cursor-pointer">
+                        Simpan Role
+                    </button>
+                </form>
+
+                <div class="mt-6 border-t border-gray-700 pt-4 space-y-2">
+                    <p class="text-xs text-gray-400 font-bold tracking-wider mb-2">ROLE TERDAFTAR:</p>
+                    <div th:each="role : ${daftarRole}" class="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-lg border border-gray-700">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-wms-accent"></i>
+                        <span class="text-sm font-bold text-gray-200" th:text="${role.nama_role}">NAMA ROLE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 flex flex-col gap-6">
+
+            <div class="bg-wms-surface p-6 rounded-2xl border border-gray-700 shadow-lg">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="user-plus" class="text-wms-accent w-5 h-5"></i> Daftarkan Pengguna Baru
+                </h3>
+                <form th:action="@{/admin/akun/simpan}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Nama Lengkap</label>
+                        <input type="text" name="namaLengkap" required class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-wms-accent">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Alamat Email (Login)</label>
+                        <input type="email" name="email" required class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-wms-accent">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Password</label>
+                        <input type="password" name="password" required class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-wms-accent">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Pilih Jabatan (Role)</label>
+                        <select name="roleId" required class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-wms-accent cursor-pointer">
+                            <option value="">-- Tetapkan Role --</option>
+                            <option th:each="role : ${daftarRole}" th:value="${role.id}" th:text="${role.nama_role}"></option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2 pt-2">
+                        <button type="submit" class="w-full py-2.5 bg-wms-accent hover:bg-green-600 font-bold rounded-lg text-white transition-colors cursor-pointer">
+                            Daftarkan Akun
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-wms-surface p-6 rounded-2xl border border-gray-700 shadow-lg flex-1">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="users" class="text-gray-400 w-5 h-5"></i> Direktori Pengguna Sistem
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                        <tr class="border-b border-gray-700">
+                            <th class="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Nama Lengkap</th>
+                            <th class="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Email Akses</th>
+                            <th class="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Hak Akses (Role)</th>
+                            <th class="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Aksi</th>
+                        </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700/50">
+                        <tr th:each="akun : ${daftarAkun}" class="hover:bg-gray-800/50 transition-colors">
+                            <td class="py-3 text-sm font-semibold text-white" th:text="${akun.nama_lengkap}">Nama</td>
+                            <td class="py-3 text-sm text-gray-400" th:text="${akun.email}">Email</td>
+                            <td class="py-3">
+                                <span class="px-2 py-1 bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] font-bold rounded uppercase tracking-widest" th:text="${akun.nama_role}">ROLE</span>
+                            </td>
+                            <td class="py-3 text-right">
+                                <form th:action="@{/admin/akun/hapus}" method="POST" onsubmit="return confirm('Cabut akses dan hapus pengguna ini?');" class="inline-block">
+                                    <input type="hidden" name="id" th:value="${akun.id}">
+                                    <button type="submit" class="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-500/20 rounded-md transition-colors cursor-pointer">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

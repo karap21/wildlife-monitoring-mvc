@@ -1,4 +1,4 @@
-package com.wildlife_tracker.backend.service;
+package com.wildlife_tracker.backend.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
